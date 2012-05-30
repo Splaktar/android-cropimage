@@ -85,7 +85,7 @@ abstract class ImageViewTouchBase extends ImageView {
             r.run();
         }
         if (mBitmapDisplayed.getBitmap() != null) {
-            getProperBaseMatrix(mBitmapDisplayed, mBaseMatrix);
+            getProperBaseMatrix(mBitmapDisplayed, mBaseMatrix, true);
             setImageMatrix(getImageViewMatrix());
         }
     }
@@ -164,7 +164,7 @@ abstract class ImageViewTouchBase extends ImageView {
         }
 
         if (bitmap.getBitmap() != null) {
-            getProperBaseMatrix(bitmap, mBaseMatrix);
+            getProperBaseMatrix(bitmap, mBaseMatrix, true);
             setImageBitmap(bitmap.getBitmap(), bitmap.getRotation());
         } else {
             mBaseMatrix.reset();
@@ -256,7 +256,7 @@ abstract class ImageViewTouchBase extends ImageView {
     }
 
     // Setup the base matrix so that the image is centered and scaled properly.
-    private void getProperBaseMatrix(RotateBitmap bitmap, Matrix matrix) {
+    private void getProperBaseMatrix(RotateBitmap bitmap, Matrix matrix, boolean includeRotation) {
         float viewWidth = getWidth();
         float viewHeight = getHeight();
 
@@ -270,7 +270,7 @@ abstract class ImageViewTouchBase extends ImageView {
         float heightScale = Math.min(viewHeight / h, 3.0f);
         float scale = Math.min(widthScale, heightScale);
 
-        matrix.postConcat(bitmap.getRotateMatrix());
+        if (includeRotation) matrix.postConcat(bitmap.getRotateMatrix());
         matrix.postScale(scale, scale);
 
         matrix.postTranslate(
@@ -285,6 +285,13 @@ abstract class ImageViewTouchBase extends ImageView {
         mDisplayMatrix.set(mBaseMatrix);
         mDisplayMatrix.postConcat(mSuppMatrix);
         return mDisplayMatrix;
+    }
+
+    public Matrix getUnrotatedMatrix(){
+        Matrix unrotated = new Matrix();
+        getProperBaseMatrix(mBitmapDisplayed, unrotated, false);
+        unrotated.postConcat(mSuppMatrix);
+        return unrotated;
     }
 
     static final float SCALE_RATE = 1.25F;
