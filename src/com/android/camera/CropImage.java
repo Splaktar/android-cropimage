@@ -128,8 +128,6 @@ public class CropImage extends MonitoredActivity{
             }
         }
 
-        Log.i("asdf","WHAT IS ROTATE BITMAP " + mRotateBitmap);
-
         if (mRotateBitmap == null) {
             finish();
             return;

@@ -372,8 +372,6 @@ class HighlightView {
 
     public void setup(Matrix m, Rect imageRect, RectF cropRect, boolean circle,
                       boolean maintainAspectRatio) {
-        Log.i("asdf","Setting up hit area now bitch " + m + " " + imageRect + " " + cropRect);
-
         if (circle) {
             maintainAspectRatio = true;
         }
