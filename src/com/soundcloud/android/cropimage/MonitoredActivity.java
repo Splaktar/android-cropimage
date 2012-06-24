@@ -16,11 +16,12 @@
 
 package com.soundcloud.android.cropimage;
 
+import android.app.Activity;
 import android.os.Bundle;
 
 import java.util.ArrayList;
 
-public class MonitoredActivity extends NoSearchActivity {
+public class MonitoredActivity extends Activity {
 
     private final ArrayList<LifeCycleListener> mListeners =
             new ArrayList<LifeCycleListener>();

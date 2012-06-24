@@ -43,7 +43,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * The activity can crop specific region of interest from an image.
  */
-public class CropImage extends MonitoredActivity{
+public class CropImage extends MonitoredActivity {
 
     private static final String TAG = CropImage.class.getSimpleName();
 
@@ -411,5 +411,9 @@ public class CropImage extends MonitoredActivity{
         mRotateBitmap.recycle();
     }
 
+    @Override
+    public boolean onSearchRequested() {
+        return false;
+    }
 }
 
