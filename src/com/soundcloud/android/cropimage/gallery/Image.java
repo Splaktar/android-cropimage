@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.camera.gallery;
+package com.soundcloud.android.cropimage.gallery;
 
-import com.android.camera.Util;
+import com.soundcloud.android.cropimage.Util;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;

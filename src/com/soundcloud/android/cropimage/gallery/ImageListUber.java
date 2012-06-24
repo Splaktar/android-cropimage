@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.camera.gallery;
+package com.soundcloud.android.cropimage.gallery;
 
 import android.net.Uri;
 
-import com.android.camera.ImageManager;
-import com.android.camera.Util;
+import com.soundcloud.android.cropimage.ImageManager;
+import com.soundcloud.android.cropimage.Util;
 
 import java.util.Arrays;
 import java.util.Comparator;

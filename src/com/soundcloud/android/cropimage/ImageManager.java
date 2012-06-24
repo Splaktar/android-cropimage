@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.camera;
+package com.soundcloud.android.cropimage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,12 +40,12 @@ import android.provider.MediaStore;
 import android.provider.MediaStore.Images;
 import android.util.Log;
 
-import com.android.camera.gallery.BaseImageList;
-import com.android.camera.gallery.IImage;
-import com.android.camera.gallery.IImageList;
-import com.android.camera.gallery.ImageList;
-import com.android.camera.gallery.ImageListUber;
-import com.android.camera.gallery.SingleImageList;
+import com.soundcloud.android.cropimage.gallery.BaseImageList;
+import com.soundcloud.android.cropimage.gallery.IImage;
+import com.soundcloud.android.cropimage.gallery.IImageList;
+import com.soundcloud.android.cropimage.gallery.ImageList;
+import com.soundcloud.android.cropimage.gallery.ImageListUber;
+import com.soundcloud.android.cropimage.gallery.SingleImageList;
 
 /**
  * ImageManager is used to retrieve and store images

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.camera.gallery;
+package com.soundcloud.android.cropimage.gallery;
 
-import com.android.camera.BitmapManager;
-import com.android.camera.Util;
+import com.soundcloud.android.cropimage.BitmapManager;
+import com.soundcloud.android.cropimage.Util;
 
 import android.content.ContentResolver;
 import android.graphics.Bitmap;
@@ -90,7 +90,7 @@ public abstract class BaseImage implements IImage {
 
     public Bitmap fullSizeBitmap(int minSideLength, int maxNumberOfPixels) {
         return fullSizeBitmap(minSideLength, maxNumberOfPixels,
-                IImage.ROTATE_AS_NEEDED, IImage.NO_NATIVE);
+                ROTATE_AS_NEEDED, NO_NATIVE);
     }
 
     public Bitmap fullSizeBitmap(int minSideLength, int maxNumberOfPixels,

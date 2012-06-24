@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.camera;
-
-import com.android.gallery.R;
+package com.soundcloud.android.cropimage;
 
 import android.graphics.Canvas;
 import android.graphics.Matrix;
@@ -27,7 +25,6 @@ import android.graphics.RectF;
 import android.graphics.Region;
 import android.graphics.drawable.Drawable;
 import android.util.FloatMath;
-import android.util.Log;
 import android.view.View;
 
 // This class is used by CropImage to display a highlighted cropping rectangle

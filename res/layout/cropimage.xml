@@ -22,10 +22,10 @@
         android:layout_height="fill_parent"
         android:orientation="horizontal">
         <view
-            android:id="@+id/image"
+            android:id="@+id/cropimage_image"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            class="com.android.camera.CropImageView"
+            class="com.soundcloud.android.cropimage.CropImageView"
             android:background="#55000000"/>
         <RelativeLayout
             android:layout_width="wrap_content"
@@ -36,13 +36,13 @@
             android:paddingLeft="10dip"
             android:paddingRight="10dip">
             <Button
-                android:id="@+id/save"
+                android:id="@+id/cropimage_save"
                 android:layout_width="100dip"
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
                 android:text="@string/crop_save_text"/>
             <Button
-                android:id="@+id/discard"
+                android:id="@+id/cropimage_discard"
                 android:layout_width="100dip"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"

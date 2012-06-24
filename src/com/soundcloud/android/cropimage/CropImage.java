@@ -16,9 +16,9 @@
 
 // originally from AOSP Camera code. modified to only do cropping and return
 // data to caller. Removed saving to file, MediaManager, unneeded options, etc.
-package com.android.camera;
+package com.soundcloud.android.cropimage;
 
-import com.android.gallery.R;
+import com.soundcloud.android.cropimage.R;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -29,7 +29,6 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -41,7 +40,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -83,7 +81,7 @@ public class CropImage extends MonitoredActivity{
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.cropimage);
 
-        mImageView = (CropImageView) findViewById(R.id.image);
+        mImageView = (CropImageView) findViewById(R.id.cropimage_image);
         mImageView.mContext = this;
         mImageView.setRecycler(new ImageViewTouchBase.Recycler() {
             @Override
@@ -136,7 +134,7 @@ public class CropImage extends MonitoredActivity{
         // Make UI fullscreen.
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        findViewById(R.id.discard).setOnClickListener(
+        findViewById(R.id.cropimage_discard).setOnClickListener(
                 new View.OnClickListener() {
                     public void onClick(View v) {
                         setResult(RESULT_CANCELED);
@@ -144,7 +142,7 @@ public class CropImage extends MonitoredActivity{
                     }
                 });
 
-        findViewById(R.id.save).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.cropimage_save).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 onSaveClicked();
             }

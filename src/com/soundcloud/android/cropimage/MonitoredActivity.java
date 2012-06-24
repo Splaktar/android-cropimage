@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.camera;
+package com.soundcloud.android.cropimage;
 
-import android.app.Activity;
 import android.os.Bundle;
 
 import java.util.ArrayList;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.camera.gallery;
+package com.soundcloud.android.cropimage.gallery;
 
 import java.util.HashMap;
 
@@ -62,7 +62,7 @@ public class ImageList extends BaseImageList implements IImageList {
             int sort, String bucketId) {
         super(resolver, imageUri, sort, bucketId);
     }
-    
+
     public ImageList(ContentResolver resolver, Uri imageUri, Uri thumbUri,
             int sort, String bucketId) {
         super(resolver, imageUri, sort, bucketId);

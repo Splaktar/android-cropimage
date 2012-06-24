@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.camera.gallery;
+package com.soundcloud.android.cropimage.gallery;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
