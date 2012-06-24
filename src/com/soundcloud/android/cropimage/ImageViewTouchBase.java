@@ -27,10 +27,6 @@ import android.view.KeyEvent;
 import android.widget.ImageView;
 
 abstract class ImageViewTouchBase extends ImageView {
-
-    @SuppressWarnings("unused")
-    private static final String TAG = "ImageViewTouchBase";
-
     // This is the base transformation which is used to show the image
     // initially.  The current computation for this shows the image in
     // it's entirety, letterboxing as needed.  One could choose to
@@ -61,21 +57,39 @@ abstract class ImageViewTouchBase extends ImageView {
 
     float mMaxZoom;
 
+    private Runnable mOnLayoutRunnable;
+
+    protected Handler mHandler = new Handler();
+
     // ImageViewTouchBase will pass a Bitmap to the Recycler if it has finished
     // its use of that Bitmap.
     public interface Recycler {
         public void recycle(Bitmap b);
     }
 
+    private Recycler mRecycler;
+
+    public ImageViewTouchBase(Context context) {
+        super(context);
+        init();
+    }
+
+    public ImageViewTouchBase(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public ImageViewTouchBase(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        init();
+    }
+
     public void setRecycler(Recycler r) {
         mRecycler = r;
     }
 
-    private Recycler mRecycler;
-
     @Override
-    protected void onLayout(boolean changed, int left, int top,
-                            int right, int bottom) {
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         mThisWidth = right - left;
         mThisHeight = bottom - top;
@@ -114,7 +128,6 @@ abstract class ImageViewTouchBase extends ImageView {
         return super.onKeyUp(keyCode, event);
     }
 
-    protected Handler mHandler = new Handler();
 
     @Override
     public void setImageBitmap(Bitmap bitmap) {
@@ -141,7 +154,6 @@ abstract class ImageViewTouchBase extends ImageView {
         setImageBitmapResetBase(null, true);
     }
 
-    private Runnable mOnLayoutRunnable = null;
 
     // This function changes bitmap, reset base matrix according to the size
     // of the bitmap, and optionally reset the supplementary matrix.
@@ -227,15 +239,7 @@ abstract class ImageViewTouchBase extends ImageView {
         setImageMatrix(getImageViewMatrix());
     }
 
-    public ImageViewTouchBase(Context context) {
-        super(context);
-        init();
-    }
 
-    public ImageViewTouchBase(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
 
     private void init() {
         setScaleType(ImageView.ScaleType.MATRIX);
@@ -307,8 +311,7 @@ abstract class ImageViewTouchBase extends ImageView {
 
         float fw = (float) mBitmapDisplayed.getWidth()  / (float) mThisWidth;
         float fh = (float) mBitmapDisplayed.getHeight() / (float) mThisHeight;
-        float max = Math.max(fw, fh) * 4;
-        return max;
+        return Math.max(fw, fh) * 4;
     }
 
     protected void zoomTo(float scale, float centerX, float centerY) {
@@ -348,14 +351,6 @@ abstract class ImageViewTouchBase extends ImageView {
         float cx = getWidth() / 2F;
         float cy = getHeight() / 2F;
 
-        zoomTo(scale, cx, cy);
-    }
-
-    protected void zoomToPoint(float scale, float pointX, float pointY) {
-        float cx = getWidth() / 2F;
-        float cy = getHeight() / 2F;
-
-        panBy(cx - pointX, cy - pointY);
         zoomTo(scale, cx, cy);
     }
 

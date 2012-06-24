@@ -16,9 +16,23 @@ public class CropImageView extends ImageViewTouchBase {
 
     Context mContext;
 
+    @SuppressWarnings("UnusedDeclaration")
+    public CropImageView(Context context) {
+        super(context);
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public CropImageView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public CropImageView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
+
     @Override
-    protected void onLayout(boolean changed, int left, int top, int right,
-            int bottom) {
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         if (mBitmapDisplayed.getBitmap() != null) {
             for (HighlightView hv : mHighlightViews) {
@@ -32,9 +46,6 @@ public class CropImageView extends ImageViewTouchBase {
         }
     }
 
-    public CropImageView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
 
     @Override
     protected void zoomTo(float scale, float centerX, float centerY) {
