@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 public class CropImageView extends ImageViewTouchBase {
     ArrayList<HighlightView> mHighlightViews = new ArrayList<HighlightView>();
-    HighlightView mMotionHighlightView = null;
+    HighlightView mMotionHighlightView;
     float mLastX, mLastY;
     int mMotionEdge;
 
@@ -66,8 +66,7 @@ public class CropImageView extends ImageViewTouchBase {
     @Override
     protected void postTranslate(float deltaX, float deltaY) {
         super.postTranslate(deltaX, deltaY);
-        for (int i = 0; i < mHighlightViews.size(); i++) {
-            HighlightView hv = mHighlightViews.get(i);
+        for (HighlightView hv : mHighlightViews) {
             hv.mMatrix.postTranslate(deltaX, deltaY);
             hv.invalidate();
         }
@@ -82,8 +81,7 @@ public class CropImageView extends ImageViewTouchBase {
 
         switch (event.getAction()) {
         case MotionEvent.ACTION_DOWN:
-            for (int i = 0; i < mHighlightViews.size(); i++) {
-                HighlightView hv = mHighlightViews.get(i);
+            for (HighlightView hv : mHighlightViews) {
                 int edge = hv.getHit(event.getX(), event.getY());
                 if (edge != HighlightView.GROW_NONE) {
                     mMotionEdge = edge;
@@ -190,8 +188,8 @@ public class CropImageView extends ImageViewTouchBase {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        for (int i = 0; i < mHighlightViews.size(); i++) {
-            mHighlightViews.get(i).draw(canvas);
+        for (HighlightView mHighlightView : mHighlightViews) {
+            mHighlightView.draw(canvas);
         }
     }
 

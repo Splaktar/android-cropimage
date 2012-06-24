@@ -16,11 +16,8 @@
 
 package com.soundcloud.android.cropimage;
 
-import android.content.ContentResolver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.provider.MediaStore.Images;
-import android.provider.MediaStore.Video;
 import android.util.Log;
 
 import java.io.FileDescriptor;
@@ -41,7 +38,7 @@ public class BitmapManager {
     private static class ThreadStatus {
         public State mState = State.ALLOW;
         public BitmapFactory.Options mOptions;
-        public boolean mThumbRequesting;
+
         @Override
         public String toString() {
             String s;
@@ -60,7 +57,7 @@ public class BitmapManager {
     private final WeakHashMap<Thread, ThreadStatus> mThreadStatus =
             new WeakHashMap<Thread, ThreadStatus>();
 
-    private static BitmapManager sManager = null;
+    private static BitmapManager sManager;
 
     private BitmapManager() {
     }
@@ -97,71 +94,7 @@ public class BitmapManager {
      */
     public synchronized boolean canThreadDecoding(Thread t) {
         ThreadStatus status = mThreadStatus.get(t);
-        if (status == null) {
-            // allow decoding by default
-            return true;
-        }
-
-        boolean result = (status.mState != State.CANCEL);
-        return result;
-    }
-
-    public synchronized void allowThreadDecoding(Thread t) {
-        getOrCreateThreadStatus(t).mState = State.ALLOW;
-    }
-
-    public synchronized void cancelThreadDecoding(Thread t, ContentResolver cr) {
-        ThreadStatus status = getOrCreateThreadStatus(t);
-        status.mState = State.CANCEL;
-        if (status.mOptions != null) {
-            status.mOptions.requestCancelDecode();
-        }
-
-        // Wake up threads in waiting list
-        notifyAll();
-
-        // Since our cancel request can arrive MediaProvider earlier than getThumbnail request,
-        // we use mThumbRequesting flag to make sure our request does cancel the request.
-        try {
-            synchronized (status) {
-                while (status.mThumbRequesting) {
-                    Images.Thumbnails.cancelThumbnailRequest(cr, t.getId());
-                    Video.Thumbnails.cancelThumbnailRequest(cr, t.getId());
-                    status.wait(200);
-                }
-            }
-        } catch (InterruptedException ex) {
-            // ignore it.
-        }
-    }
-
-    public Bitmap getThumbnail(ContentResolver cr, long origId, int kind,
-            BitmapFactory.Options options, boolean isVideo) {
-        Thread t = Thread.currentThread();
-        ThreadStatus status = getOrCreateThreadStatus(t);
-
-        if (!canThreadDecoding(t)) {
-            Log.d(TAG, "Thread " + t + " is not allowed to decode.");
-            return null;
-        }
-
-        try {
-            synchronized (status) {
-                status.mThumbRequesting = true;
-            }
-            if (isVideo) {
-                return Video.Thumbnails.getThumbnail(cr, t.getId(),
-                        kind, null);
-            } else {
-                return Images.Thumbnails.getThumbnail(cr, t.getId(),
-                        kind, null);
-            }
-        } finally {
-            synchronized (status) {
-                status.mThumbRequesting = false;
-                status.notifyAll();
-            }
-        }
+        return status == null || (status.mState != State.CANCEL);
     }
 
     public static synchronized BitmapManager instance() {

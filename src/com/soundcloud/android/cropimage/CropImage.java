@@ -47,18 +47,14 @@ public class CropImage extends MonitoredActivity{
 
     private static final String TAG = CropImage.class.getSimpleName();
 
-    private static final boolean RECYCLE_INPUT = true;
-
     private int mAspectX, mAspectY;
     private final Handler mHandler = new Handler();
 
-    // These options specifiy the output image size and whether we should
+    // These options specify the output image size and whether we should
     // scale the output to fit it (or just crop it).
     private int mOutputX, mOutputY, mExifRotation;
     private boolean mScale;
-    private boolean mScaleUp = true;
-    private boolean mCircleCrop = false;
-    private Uri mSaveUri = null;
+    private Uri mSaveUri;
 
     boolean mSaving; // Whether the "save" button is already clicked.
 
@@ -95,7 +91,6 @@ public class CropImage extends MonitoredActivity{
             mOutputY = extras.getInt("outputY");
             mExifRotation = extras.getInt("exifRotation");
             mScale = extras.getBoolean("scale", true);
-            mScaleUp = extras.getBoolean("scaleUpIfNeeded", true);
             mSaveUri = (Uri) extras.getParcelable(MediaStore.EXTRA_OUTPUT);
             if (extras.containsKey("data")){
                 mRotateBitmap = new RotateBitmap((Bitmap) extras.getParcelable("data"), mExifRotation);
@@ -142,29 +137,21 @@ public class CropImage extends MonitoredActivity{
             }
         });
 
-        startFaceDetection();
+        startCrop();
     }
 
-    private void startFaceDetection() {
+    private void startCrop() {
         if (isFinishing()) {
             return;
         }
-
         mImageView.setImageRotateBitmapResetBase(mRotateBitmap, true);
-
         startBackgroundJob(this, null,
                 getResources().getString(R.string.runningFaceDetection),
                 new Runnable() {
                     public void run() {
                         final CountDownLatch latch = new CountDownLatch(1);
-                        final RotateBitmap b = mRotateBitmap;
                         mHandler.post(new Runnable() {
                             public void run() {
-                                if (b != mRotateBitmap && b != null) {
-                                    mImageView.setImageRotateBitmapResetBase(b, true);
-                                    mRotateBitmap.recycle();
-                                    mRotateBitmap = b;
-                                }
                                 if (mImageView.getScale() == 1F) {
                                     mImageView.center(true, true);
                                 }
@@ -176,7 +163,7 @@ public class CropImage extends MonitoredActivity{
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
-                        mRunFaceDetection.run();
+                        mRunCrop.run();
                     }
                 }, mHandler);
     }
@@ -236,19 +223,19 @@ public class CropImage extends MonitoredActivity{
 
     private static void startBackgroundJob(MonitoredActivity activity,
             String title, String message, Runnable job, Handler handler) {
-        // Make the progress dialog uncancelable, so that we can gurantee
+        // Make the progress dialog uncancelable, so that we can guarantee
         // the thread will be done before the activity getting destroyed.
         ProgressDialog dialog = ProgressDialog.show(activity, title, message,
                 true, false);
         new Thread(new BackgroundJob(activity, job, dialog, handler)).start();
     }
 
-    Runnable mRunFaceDetection = new Runnable() {
+    Runnable mRunCrop = new Runnable() {
         float mScale = 1F;
 
         // Create a default HightlightView if we found no face in the picture.
         private void makeDefault() {
-            HighlightView hv = new HighlightView(mImageView, mExifRotation);
+            HighlightView hv = new HighlightView(mImageView);
             final int width = mRotateBitmap.getWidth();
             final int height = mRotateBitmap.getHeight();
 
@@ -270,7 +257,7 @@ public class CropImage extends MonitoredActivity{
             int y = (height - cropHeight) / 2;
 
             RectF cropRect = new RectF(x, y, x + cropWidth, y + cropHeight);
-            hv.setup(mImageView.getUnrotatedMatrix(), imageRect, cropRect, mCircleCrop,
+            hv.setup(mImageView.getUnrotatedMatrix(), imageRect, cropRect, false,
                     mAspectX != 0 && mAspectY != 0);
             mImageView.add(hv);
         }
@@ -411,87 +398,6 @@ public class CropImage extends MonitoredActivity{
         });
 
         finish();
-    }
-
-    private static Bitmap transform(Matrix scaler, Bitmap source,
-            int targetWidth, int targetHeight, boolean scaleUp, boolean recycle) {
-        int deltaX = source.getWidth() - targetWidth;
-        int deltaY = source.getHeight() - targetHeight;
-        if (!scaleUp && (deltaX < 0 || deltaY < 0)) {
-            /*
-             * In this case the bitmap is smaller, at least in one dimension,
-             * than the target. Transform it by placing as much of the image as
-             * possible into the target and leaving the top/bottom or left/right
-             * (or both) black.
-             */
-            Bitmap b2 = Bitmap.createBitmap(targetWidth, targetHeight,
-                    Bitmap.Config.ARGB_8888);
-            Canvas c = new Canvas(b2);
-
-            int deltaXHalf = Math.max(0, deltaX / 2);
-            int deltaYHalf = Math.max(0, deltaY / 2);
-            Rect src = new Rect(deltaXHalf, deltaYHalf, deltaXHalf
-                    + Math.min(targetWidth, source.getWidth()), deltaYHalf
-                    + Math.min(targetHeight, source.getHeight()));
-            int dstX = (targetWidth - src.width()) / 2;
-            int dstY = (targetHeight - src.height()) / 2;
-            Rect dst = new Rect(dstX, dstY, targetWidth - dstX, targetHeight
-                    - dstY);
-            c.drawBitmap(source, src, dst, null);
-            if (recycle) {
-                source.recycle();
-            }
-            return b2;
-        }
-        float bitmapWidthF = source.getWidth();
-        float bitmapHeightF = source.getHeight();
-
-        float bitmapAspect = bitmapWidthF / bitmapHeightF;
-        float viewAspect = (float) targetWidth / targetHeight;
-
-        if (bitmapAspect > viewAspect) {
-            float scale = targetHeight / bitmapHeightF;
-            if (scale < .9F || scale > 1F) {
-                scaler.setScale(scale, scale);
-            } else {
-                scaler = null;
-            }
-        } else {
-            float scale = targetWidth / bitmapWidthF;
-            if (scale < .9F || scale > 1F) {
-                scaler.setScale(scale, scale);
-            } else {
-                scaler = null;
-            }
-        }
-
-        Bitmap b1;
-        if (scaler != null) {
-            // this is used for minithumb and crop, so we want to filter here.
-            b1 = Bitmap.createBitmap(source, 0, 0, source.getWidth(),
-                    source.getHeight(), scaler, true);
-        } else {
-            b1 = source;
-        }
-
-        if (recycle && b1 != source) {
-            source.recycle();
-            System.gc();
-        }
-
-        int dx1 = Math.max(0, b1.getWidth() - targetWidth);
-        int dy1 = Math.max(0, b1.getHeight() - targetHeight);
-
-        Bitmap b2 = Bitmap.createBitmap(b1, dx1 / 2, dy1 / 2, targetWidth,
-                targetHeight);
-
-        if (b2 != b1) {
-            if (recycle || b1 != source) {
-                b1.recycle();
-            }
-        }
-
-        return b2;
     }
 
     @Override

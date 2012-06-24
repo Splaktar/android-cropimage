@@ -44,11 +44,9 @@ class HighlightView {
     public static final int GROW_BOTTOM_EDGE = (1 << 4);
     public static final int MOVE             = (1 << 5);
 
-    private int mRotation;
 
-    public HighlightView(View ctx, int rotation) {
+    public HighlightView(View ctx) {
         mContext = ctx;
-        mRotation = rotation;
     }
 
     private void init() {
@@ -70,10 +68,6 @@ class HighlightView {
 
     public void setFocus(boolean f) {
         mIsFocused = f;
-    }
-
-    public void setHidden(boolean hidden) {
-        mHidden = hidden;
     }
 
     protected void draw(Canvas canvas) {
@@ -243,9 +237,7 @@ class HighlightView {
     // The "edge" parameter specifies which edges the user is dragging.
     void handleMotion(int edge, float dx, float dy) {
         Rect r = computeLayout();
-        if (edge == GROW_NONE) {
-            return;
-        } else if (edge == MOVE) {
+        if (edge == MOVE) {
             // Convert to image space before sending to moveBy().
             moveBy(dx * (mCropRect.width() / r.width()),
                    dy * (mCropRect.height() / r.height()));
@@ -266,7 +258,7 @@ class HighlightView {
         }
     }
 
-    // Grows the cropping rectange by (dx, dy) in image space.
+    // Grows the cropping rectangle by (dx, dy) in image space.
     void moveBy(float dx, float dy) {
         Rect invalRect = new Rect(mDrawRect);
 
@@ -288,7 +280,7 @@ class HighlightView {
         mContext.invalidate(invalRect);
     }
 
-    // Grows the cropping rectange by (dx, dy) in image space.
+    // Grows the cropping rectangle by (dx, dy) in image space.
     void growBy(float dx, float dy) {
         if (mMaintainAspectRatio) {
             if (dx != 0) {
@@ -303,15 +295,13 @@ class HighlightView {
         // the cropping rectangle.
         RectF r = new RectF(mCropRect);
         if (dx > 0F && r.width() + 2 * dx > mImageRect.width()) {
-            float adjustment = (mImageRect.width() - r.width()) / 2F;
-            dx = adjustment;
+            dx = (mImageRect.width() - r.width()) / 2F;
             if (mMaintainAspectRatio) {
                 dy = dx / mInitialAspectRatio;
             }
         }
         if (dy > 0F && r.height() + 2 * dy > mImageRect.height()) {
-            float adjustment = (mImageRect.height() - r.height()) / 2F;
-            dy = adjustment;
+            dy = (mImageRect.height() - r.height()) / 2F;
             if (mMaintainAspectRatio) {
                 dx = dy * mInitialAspectRatio;
             }
@@ -401,9 +391,9 @@ class HighlightView {
     RectF mCropRect;  // in image space
     Matrix mMatrix;
 
-    private boolean mMaintainAspectRatio = false;
+    private boolean mMaintainAspectRatio;
     private float mInitialAspectRatio;
-    private boolean mCircle = false;
+    private boolean mCircle;
 
     private Drawable mResizeDrawableWidth;
     private Drawable mResizeDrawableHeight;
