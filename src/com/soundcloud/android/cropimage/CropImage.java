@@ -146,7 +146,7 @@ public class CropImage extends MonitoredActivity {
         }
         mImageView.setImageRotateBitmapResetBase(mRotateBitmap, true);
         startBackgroundJob(this, null,
-                getResources().getString(R.string.runningFaceDetection),
+                getResources().getString(R.string.please_wait),
                 new Runnable() {
                     public void run() {
                         final CountDownLatch latch = new CountDownLatch(1);
