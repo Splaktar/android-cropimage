@@ -31,7 +31,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 
-import com.soundcloud.android.cropimage.gallery.IImage;
 
 import java.io.Closeable;
 import java.io.FileDescriptor;
@@ -46,6 +45,7 @@ public class Util {
     public static final int DIRECTION_RIGHT = 1;
     public static final int DIRECTION_UP = 2;
     public static final int DIRECTION_DOWN = 3;
+    public static final int UNCONSTRAINED = -1;
 
     private static OnClickListener sNullOnClickListener;
 
@@ -115,9 +115,9 @@ public class Util {
         double w = options.outWidth;
         double h = options.outHeight;
 
-        int lowerBound = (maxNumOfPixels == IImage.UNCONSTRAINED) ? 1 :
+        int lowerBound = (maxNumOfPixels == UNCONSTRAINED) ? 1 :
                 (int) Math.ceil(Math.sqrt(w * h / maxNumOfPixels));
-        int upperBound = (minSideLength == IImage.UNCONSTRAINED) ? 128 :
+        int upperBound = (minSideLength == UNCONSTRAINED) ? 128 :
                 (int) Math.min(Math.floor(w / minSideLength),
                 Math.floor(h / minSideLength));
 
@@ -126,10 +126,10 @@ public class Util {
             return lowerBound;
         }
 
-        if ((maxNumOfPixels == IImage.UNCONSTRAINED) &&
-                (minSideLength == IImage.UNCONSTRAINED)) {
+        if ((maxNumOfPixels == UNCONSTRAINED) &&
+                (minSideLength == UNCONSTRAINED)) {
             return 1;
-        } else if (minSideLength == IImage.UNCONSTRAINED) {
+        } else if (minSideLength == UNCONSTRAINED) {
             return lowerBound;
         } else {
             return upperBound;
@@ -411,15 +411,6 @@ public class Util {
         ProgressDialog dialog = ProgressDialog.show(
                 activity, title, message, true, false);
         new Thread(new BackgroundJob(activity, job, dialog, handler)).start();
-    }
-
-    // Returns an intent which is used for "set as" menu items.
-    public static Intent createSetAsIntent(IImage image) {
-        Uri u = image.fullSizeImageUri();
-        Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
-        intent.setDataAndType(u, image.getMimeType());
-        intent.putExtra("mimeType", image.getMimeType());
-        return intent;
     }
 
     // Returns Options that set the puregeable flag for Bitmap decode.
