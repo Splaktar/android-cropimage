@@ -52,8 +52,7 @@ public class CropImage extends MonitoredActivity {
 
     // These options specify the output image size and whether we should
     // scale the output to fit it (or just crop it).
-    private int mOutputX, mOutputY, mExifRotation;
-    private boolean mScale;
+    private int mMaxX, mMaxY, mExifRotation;
     private Uri mSaveUri;
 
     boolean mSaving; // Whether the "save" button is already clicked.
@@ -87,10 +86,9 @@ public class CropImage extends MonitoredActivity {
         if (extras != null) {
             mAspectX = extras.getInt("aspectX");
             mAspectY = extras.getInt("aspectY");
-            mOutputX = extras.getInt("outputX");
-            mOutputY = extras.getInt("outputY");
+            mMaxX = extras.getInt("maxX");
+            mMaxY = extras.getInt("maxY");
             mExifRotation = extras.getInt("exifRotation");
-            mScale = extras.getBoolean("scale", true);
             mSaveUri = (Uri) extras.getParcelable(MediaStore.EXTRA_OUTPUT);
             if (extras.containsKey("data")){
                 mRotateBitmap = new RotateBitmap((Bitmap) extras.getParcelable("data"), mExifRotation);
@@ -289,61 +287,36 @@ public class CropImage extends MonitoredActivity {
             return;
         mSaving = true;
 
-        Bitmap croppedImage;
+        Rect r = mCrop.getCropRect();
+        int width = r.width();
+        int height = r.height();
 
-        // If the output is required to a specific size, create an new image
-        // with the cropped image in the center and the extra space filled.
-        if (mOutputX != 0 && mOutputY != 0 && !mScale) {
-            // Don't scale the image but instead fill it so it's the
-            // required dimension
-            croppedImage = Bitmap.createBitmap(mOutputX, mOutputY,
-                    Bitmap.Config.RGB_565);
-            Canvas canvas = new Canvas(croppedImage);
-
-            Rect srcRect = mCrop.getCropRect();
-            Rect dstRect = new Rect(0, 0, mOutputX, mOutputY);
-
-            int dx = (srcRect.width() - dstRect.width()) / 2;
-            int dy = (srcRect.height() - dstRect.height()) / 2;
-
-            // If the srcRect is too big, use the center part of it.
-            srcRect.inset(Math.max(0, dx), Math.max(0, dy));
-
-            // If the dstRect is too big, use the center part of it.
-            dstRect.inset(Math.max(0, -dx), Math.max(0, -dy));
-
-            // Draw the cropped bitmap in the center
-            canvas.drawBitmap(mRotateBitmap.getBitmap(), srcRect, dstRect, null);
-
-            // Release bitmap memory as soon as possible
-            mImageView.clear();
-            mRotateBitmap.recycle();
-        } else {
-            Rect r = mCrop.getCropRect();
-            int width = r.width();
-            int height = r.height();
-            croppedImage = Bitmap.createBitmap(width, height,
-                    Bitmap.Config.RGB_565);
-
-            Canvas canvas = new Canvas(croppedImage);
-            RectF dstRect = new RectF(0, 0, width, height);
-
-            Matrix m = new Matrix();
-            m.setRectToRect(new RectF(r), dstRect, Matrix.ScaleToFit.FILL);
-            m.preConcat(mRotateBitmap.getRotateMatrix());
-            canvas.drawBitmap(mRotateBitmap.getBitmap(), m, null);
-
-            // Release bitmap memory as soon as possible
-            mImageView.clear();
-            mRotateBitmap.recycle();
-            System.gc();
-
-            // If the required dimension is specified, scale the image.
-            /*if (mOutputX != 0 && mOutputY != 0 && mScale) {
-                croppedImage = transform(new Matrix(), croppedImage, mOutputX,
-                        mOutputY, mScaleUp, RECYCLE_INPUT);
-            }*/
+        int outWidth = width, outHeight = height;
+        if (mMaxX > 0 && mMaxY > 0 && (width > mMaxX || height > mMaxY)) {
+            float ratio = (float) width / (float) height;
+            if ((float) mMaxX / (float) mMaxY > ratio) {
+                outHeight = mMaxY;
+                outWidth = (int) ((float) mMaxY * ratio + .5f);
+            } else {
+                outWidth = mMaxX;
+                outHeight = (int) ((float) mMaxX / ratio + .5f);
+            }
         }
+
+        Bitmap croppedImage = Bitmap.createBitmap(outWidth, outHeight, Bitmap.Config.RGB_565);
+        Canvas canvas = new Canvas(croppedImage);
+        RectF dstRect = new RectF(0, 0, width, height);
+
+        Matrix m = new Matrix();
+        m.setRectToRect(new RectF(r), dstRect, Matrix.ScaleToFit.FILL);
+        m.preConcat(mRotateBitmap.getRotateMatrix());
+        canvas.drawBitmap(mRotateBitmap.getBitmap(), m, null);
+
+        // Release bitmap memory as soon as possible
+        mImageView.clear();
+        mRotateBitmap.recycle();
+        System.gc();
+
 
         mImageView.setImageBitmapResetBase(croppedImage, true);
         mImageView.center(true, true);
