@@ -22,11 +22,13 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapRegionDecoder;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
@@ -62,6 +64,8 @@ public class CropImage extends MonitoredActivity {
     private RotateBitmap mRotateBitmap;
     HighlightView mCrop;
 
+    private Uri mSourceUri;
+
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -95,10 +99,11 @@ public class CropImage extends MonitoredActivity {
             }
         }
 
+        mSourceUri = intent.getData();
         if (mRotateBitmap == null) {
             InputStream is = null;
             try {
-                is = getContentResolver().openInputStream(intent.getData());
+                is = getContentResolver().openInputStream(mSourceUri);
                 mRotateBitmap =  new RotateBitmap(BitmapFactory.decodeStream(is), mExifRotation);
             } catch (IOException e) {
                 Log.e(TAG, "error reading picture: " + e.getMessage(), e);
@@ -287,6 +292,7 @@ public class CropImage extends MonitoredActivity {
             return;
         mSaving = true;
 
+        Bitmap croppedImage = null;
         Rect r = mCrop.getCropRect();
         int width = r.width();
         int height = r.height();
@@ -303,44 +309,92 @@ public class CropImage extends MonitoredActivity {
             }
         }
 
-        Bitmap croppedImage = Bitmap.createBitmap(outWidth, outHeight, Bitmap.Config.RGB_565);
-        Canvas canvas = new Canvas(croppedImage);
-        RectF dstRect = new RectF(0, 0, width, height);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD_MR1){
 
-        Matrix m = new Matrix();
-        m.setRectToRect(new RectF(r), dstRect, Matrix.ScaleToFit.FILL);
-        m.preConcat(mRotateBitmap.getRotateMatrix());
-        canvas.drawBitmap(mRotateBitmap.getBitmap(), m, null);
+            // in memory crop, potential OOM errors,
+            // but we have no choice as we can't selectively decode a bitmap with this sdk
+            System.gc();
 
-        // Release bitmap memory as soon as possible
-        mImageView.clear();
-        mRotateBitmap.recycle();
-        System.gc();
+            try {
+                croppedImage = Bitmap.createBitmap(outWidth, outHeight, Bitmap.Config.RGB_565);
 
+                Canvas canvas = new Canvas(croppedImage);
+                RectF dstRect = new RectF(0, 0, width, height);
 
-        mImageView.setImageBitmapResetBase(croppedImage, true);
-        mImageView.center(true, true);
-        mImageView.mHighlightViews.clear();
+                Matrix m = new Matrix();
+                m.setRectToRect(new RectF(r), dstRect, Matrix.ScaleToFit.FILL);
+                m.preConcat(mRotateBitmap.getRotateMatrix());
+                canvas.drawBitmap(mRotateBitmap.getBitmap(), m, null);
+
+            } catch (OutOfMemoryError e){
+                Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
+                System.gc();
+            }
+
+            // Release bitmap memory as soon as possible
+            clearImageView();
+
+        } else {
+
+            // release memory now
+            clearImageView();
+
+            InputStream is = null;
+            try {
+                is = getContentResolver().openInputStream(mSourceUri);
+                BitmapRegionDecoder bitmapRegionDecoder = BitmapRegionDecoder.newInstance(is, false);
+                croppedImage = bitmapRegionDecoder.decodeRegion(r, new BitmapFactory.Options());
+            } catch (IOException e) {
+                Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
+                finish();
+            } finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
+        }
+
+        if (croppedImage != null){
+            mImageView.setImageBitmapResetBase(croppedImage, true);
+            mImageView.center(true, true);
+            mImageView.mHighlightViews.clear();
+        }
 
         // Return the cropped image directly or save it to the specified URI.
         Bundle myExtras = getIntent().getExtras();
         if (myExtras != null && (myExtras.getParcelable("data") != null
                 || myExtras.getBoolean("return-data"))) {
             Bundle extras = new Bundle();
-            extras.putParcelable("data", croppedImage);
+            if (croppedImage != null) {
+                extras.putParcelable("data", croppedImage);
+            }
             setResult(RESULT_OK,
                     (new Intent()).setAction("inline-data").putExtras(extras));
             finish();
         } else {
-            final Bitmap b = croppedImage;
-            Util.startBackgroundJob(this, null,
-                    getResources().getString(R.string.savingImage),
-                    new Runnable() {
-                public void run() {
-                    saveOutput(b);
-                }
-            }, mHandler);
+            if (croppedImage != null){
+                final Bitmap b = croppedImage;
+                Util.startBackgroundJob(this, null,
+                        getResources().getString(R.string.savingImage),
+                        new Runnable() {
+                            public void run() {
+                                saveOutput(b);
+                            }
+                        }, mHandler);
+            } else {
+                finish();
+            }
+
         }
+    }
+
+    private void clearImageView() {
+        mImageView.clear();
+        mRotateBitmap.recycle();
+        System.gc();
     }
 
     private void saveOutput(Bitmap croppedImage) {
