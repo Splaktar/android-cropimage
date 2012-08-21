@@ -66,7 +66,6 @@ public class CropImage extends MonitoredActivity {
 
     private Uri mSourceUri;
 
-
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -309,52 +308,10 @@ public class CropImage extends MonitoredActivity {
             }
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD_MR1){
-
-            // in memory crop, potential OOM errors,
-            // but we have no choice as we can't selectively decode a bitmap with this sdk
-            System.gc();
-
-            try {
-                croppedImage = Bitmap.createBitmap(outWidth, outHeight, Bitmap.Config.RGB_565);
-
-                Canvas canvas = new Canvas(croppedImage);
-                RectF dstRect = new RectF(0, 0, width, height);
-
-                Matrix m = new Matrix();
-                m.setRectToRect(new RectF(r), dstRect, Matrix.ScaleToFit.FILL);
-                m.preConcat(mRotateBitmap.getRotateMatrix());
-                canvas.drawBitmap(mRotateBitmap.getBitmap(), m, null);
-
-            } catch (OutOfMemoryError e){
-                Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
-                System.gc();
-            }
-
-            // Release bitmap memory as soon as possible
-            clearImageView();
-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD_MR1) {
+            croppedImage = inMemoryCrop(croppedImage, r, width, height, outWidth, outHeight);
         } else {
-
-            // release memory now
-            clearImageView();
-
-            InputStream is = null;
-            try {
-                is = getContentResolver().openInputStream(mSourceUri);
-                BitmapRegionDecoder bitmapRegionDecoder = BitmapRegionDecoder.newInstance(is, false);
-                croppedImage = bitmapRegionDecoder.decodeRegion(r, new BitmapFactory.Options());
-            } catch (IOException e) {
-                Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
-                finish();
-            } finally {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (IOException ignored) {
-                    }
-                }
-            }
+            croppedImage = decodeRegionCrop(croppedImage, r);
         }
 
         if (croppedImage != null){
@@ -389,6 +346,56 @@ public class CropImage extends MonitoredActivity {
             }
 
         }
+    }
+
+    @SuppressWarnings("NewApi")
+    private Bitmap decodeRegionCrop(Bitmap croppedImage, Rect r) {
+        // release memory now
+        clearImageView();
+
+        InputStream is = null;
+        try {
+            is = getContentResolver().openInputStream(mSourceUri);
+            BitmapRegionDecoder bitmapRegionDecoder = BitmapRegionDecoder.newInstance(is, false);
+            croppedImage = bitmapRegionDecoder.decodeRegion(r, new BitmapFactory.Options());
+        } catch (IOException e) {
+            Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
+            finish();
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        return croppedImage;
+    }
+
+    private Bitmap inMemoryCrop(Bitmap croppedImage, Rect r, int width, int height, int outWidth, int outHeight) {
+        // in memory crop, potential OOM errors,
+        // but we have no choice as we can't selectively decode a bitmap with this sdk
+        System.gc();
+
+        try {
+            croppedImage = Bitmap.createBitmap(outWidth, outHeight, Bitmap.Config.RGB_565);
+
+            Canvas canvas = new Canvas(croppedImage);
+            RectF dstRect = new RectF(0, 0, width, height);
+
+            Matrix m = new Matrix();
+            m.setRectToRect(new RectF(r), dstRect, Matrix.ScaleToFit.FILL);
+            m.preConcat(mRotateBitmap.getRotateMatrix());
+            canvas.drawBitmap(mRotateBitmap.getBitmap(), m, null);
+
+        } catch (OutOfMemoryError e){
+            Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
+            System.gc();
+        }
+
+        // Release bitmap memory as soon as possible
+        clearImageView();
+        return croppedImage;
     }
 
     private void clearImageView() {
