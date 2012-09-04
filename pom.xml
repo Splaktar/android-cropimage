@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.soundcloud.android</groupId>
         <artifactId>parent</artifactId>
-        <version>2.2.9</version>
+        <version>2.2.10</version>
     </parent>
 
     <groupId>com.soundcloud.android</groupId>
@@ -38,4 +38,18 @@
            </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>soundcloud.internal.hosted</id>
+            <name>SoundCloud Internal hosted</name>
+            <url>http://maven.int.s-cloud.net/content/groups/hosted</url>
+        </repository>
+
+        <repository>
+            <id>soundcloud.internal.proxy</id>
+            <name>SoundCloud Internal proxy</name>
+            <url>http://maven.int.s-cloud.net/content/groups/proxy</url>
+        </repository>
+    </repositories>
 </project>
