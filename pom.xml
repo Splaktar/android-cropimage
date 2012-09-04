@@ -38,18 +38,4 @@
            </plugin>
         </plugins>
     </build>
-
-    <repositories>
-        <repository>
-            <id>soundcloud.internal.hosted</id>
-            <name>SoundCloud Internal hosted</name>
-            <url>http://maven.int.s-cloud.net/content/groups/hosted</url>
-        </repository>
-
-        <repository>
-            <id>soundcloud.internal.proxy</id>
-            <name>SoundCloud Internal proxy</name>
-            <url>http://maven.int.s-cloud.net/content/groups/proxy</url>
-        </repository>
-    </repositories>
 </project>
