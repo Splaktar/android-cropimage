@@ -18,6 +18,7 @@
 // data to caller. Removed saving to file, MediaManager, unneeded options, etc.
 package com.soundcloud.android.cropimage;
 
+import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -348,6 +349,7 @@ public class CropImage extends MonitoredActivity {
         }
     }
 
+    @TargetApi(10)
     private Bitmap decodeRegionCrop(Bitmap croppedImage, Rect r) {
         // release memory now
         clearImageView();
