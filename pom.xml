@@ -44,4 +44,16 @@
            </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+	<snapshotRepository>
+		<id>soundcloud-snapshots</id>
+		<name>SoundCloud Snapshots</name>
+		<url>http://maven.int.s-cloud.net/content/repositories/snapshots</url>
+	</snapshotRepository>
+	<repository>
+		<id>soundcloud-releases</id>
+		<name>SoundCloud Releases</name>
+		<url>http://maven.int.s-cloud.net/content/repositories/releases</url>
+	</repository>
+    </distributionManagement>
 </project>
