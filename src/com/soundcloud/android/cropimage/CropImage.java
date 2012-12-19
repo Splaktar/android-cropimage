@@ -316,7 +316,7 @@ public class CropImage extends MonitoredActivity {
             try {
                 croppedImage = decodeRegionCrop(croppedImage, r);
             } catch (IllegalArgumentException e) {
-                setResult(RESULT_OK, new Intent().putExtra("error", e.toString()));
+                setResult(RESULT_OK, new Intent().putExtra("error", e));
                 finish();
                 return;
             }
