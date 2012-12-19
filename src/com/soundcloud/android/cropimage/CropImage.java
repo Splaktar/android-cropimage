@@ -312,7 +312,14 @@ public class CropImage extends MonitoredActivity {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD_MR1) {
             croppedImage = inMemoryCrop(croppedImage, r, width, height, outWidth, outHeight);
         } else {
-            croppedImage = decodeRegionCrop(croppedImage, r);
+
+            try {
+                croppedImage = decodeRegionCrop(croppedImage, r);
+            } catch (IllegalArgumentException e) {
+                setResult(RESULT_OK, new Intent().putExtra("error", e.toString()));
+                finish();
+                return;
+            }
         }
 
         if (croppedImage != null){
@@ -349,16 +356,29 @@ public class CropImage extends MonitoredActivity {
         }
     }
 
+    /**
+     * @param croppedImage the cropped image
+     * @param rect rectangle to crop
+     * @return the bitmap
+     * @throws IllegalArgumentException if the rectangle is outside of the image
+     */
     @TargetApi(10)
-    private Bitmap decodeRegionCrop(Bitmap croppedImage, Rect r) {
+    private Bitmap decodeRegionCrop(Bitmap croppedImage, Rect rect) {
         // release memory now
         clearImageView();
 
         InputStream is = null;
         try {
             is = getContentResolver().openInputStream(mSourceUri);
-            BitmapRegionDecoder bitmapRegionDecoder = BitmapRegionDecoder.newInstance(is, false);
-            croppedImage = bitmapRegionDecoder.decodeRegion(r, new BitmapFactory.Options());
+            BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(is, false);
+
+            final int width  = decoder.getWidth();
+            final int height = decoder.getHeight();
+            if (rect.right <= 0 || rect.bottom <= 0 || rect.left >= width || rect.top >= height) {
+                throw new IllegalArgumentException("rectangle "+rect+" is outside of the image ("+width+","+height+")");
+            }
+
+            croppedImage = decoder.decodeRegion(rect, new BitmapFactory.Options());
         } catch (IOException e) {
             Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
             finish();
