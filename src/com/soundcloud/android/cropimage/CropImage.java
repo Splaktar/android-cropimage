@@ -374,11 +374,15 @@ public class CropImage extends MonitoredActivity {
 
             final int width  = decoder.getWidth();
             final int height = decoder.getHeight();
-            if (rect.right <= 0 || rect.bottom <= 0 || rect.left >= width || rect.top >= height) {
-                throw new IllegalArgumentException("rectangle "+rect+" is outside of the image ("+width+","+height+")");
+
+            try {
+                croppedImage = decoder.decodeRegion(rect, new BitmapFactory.Options());
+            } catch (IllegalArgumentException e) {
+                // rethrow with some extra information
+                throw new IllegalArgumentException(
+                        "rectangle "+rect+" is outside of the image ("+width+","+height+")", e);
             }
 
-            croppedImage = decoder.decodeRegion(rect, new BitmapFactory.Options());
         } catch (IOException e) {
             Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
             finish();
