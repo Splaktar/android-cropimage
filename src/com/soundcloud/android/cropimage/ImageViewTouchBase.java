@@ -51,7 +51,7 @@ abstract class ImageViewTouchBase extends ImageView {
     private final float[] mMatrixValues = new float[9];
 
     // The current bitmap being displayed.
-    protected final RotateBitmap mBitmapDisplayed = new RotateBitmap(null);
+    protected final RotateBitmap mBitmapDisplayed = new RotateBitmap(null, 0);
 
     int mThisWidth = -1, mThisHeight = -1;
 
@@ -157,9 +157,8 @@ abstract class ImageViewTouchBase extends ImageView {
 
     // This function changes bitmap, reset base matrix according to the size
     // of the bitmap, and optionally reset the supplementary matrix.
-    public void setImageBitmapResetBase(final Bitmap bitmap,
-            final boolean resetSupp) {
-        setImageRotateBitmapResetBase(new RotateBitmap(bitmap), resetSupp);
+    public void setImageBitmapResetBase(final Bitmap bitmap, final boolean resetSupp) {
+        setImageRotateBitmapResetBase(new RotateBitmap(bitmap, 0), resetSupp);
     }
 
     public void setImageRotateBitmapResetBase(final RotateBitmap bitmap,
@@ -196,15 +195,15 @@ abstract class ImageViewTouchBase extends ImageView {
     // is scaled larger than the view and is translated out of view
     // then translate it back into view (i.e. eliminate black bars).
     protected void center(boolean horizontal, boolean vertical) {
-        if (mBitmapDisplayed.getBitmap() == null) {
+        final Bitmap bitmap = mBitmapDisplayed.getBitmap();
+        if (bitmap == null) {
             return;
         }
-
         Matrix m = getImageViewMatrix();
 
         RectF rect = new RectF(0, 0,
-                mBitmapDisplayed.getBitmap().getWidth(),
-                mBitmapDisplayed.getBitmap().getHeight());
+                bitmap.getWidth(),
+                bitmap.getHeight());
 
         m.mapRect(rect);
 

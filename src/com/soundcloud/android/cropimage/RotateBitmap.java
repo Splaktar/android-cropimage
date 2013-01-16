@@ -16,20 +16,16 @@
 
 package com.soundcloud.android.cropimage;
 
+import org.jetbrains.annotations.Nullable;
+
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 
 public class RotateBitmap {
-    public static final String TAG = "RotateBitmap";
-    private Bitmap mBitmap;
+    private @Nullable Bitmap mBitmap;
     private int mRotation;
 
-    public RotateBitmap(Bitmap bitmap) {
-        mBitmap = bitmap;
-        mRotation = 0;
-    }
-
-    public RotateBitmap(Bitmap bitmap, int rotation) {
+    public RotateBitmap(@Nullable Bitmap bitmap, int rotation) {
         mBitmap = bitmap;
         mRotation = rotation % 360;
     }
@@ -42,7 +38,7 @@ public class RotateBitmap {
         return mRotation;
     }
 
-    public Bitmap getBitmap() {
+    public @Nullable Bitmap getBitmap() {
         return mBitmap;
     }
 
@@ -53,7 +49,7 @@ public class RotateBitmap {
     public Matrix getRotateMatrix() {
         // By default this is an identity matrix.
         Matrix matrix = new Matrix();
-        if (mRotation != 0) {
+        if (mBitmap != null && mRotation != 0) {
             // We want to do the rotation at origin, but since the bounding
             // rectangle will be changed after rotation, so the delta values
             // are based on old & new width/height respectively.
@@ -71,6 +67,7 @@ public class RotateBitmap {
     }
 
     public int getHeight() {
+        if (mBitmap == null) return 0;
         if (isOrientationChanged()) {
             return mBitmap.getWidth();
         } else {
@@ -79,6 +76,7 @@ public class RotateBitmap {
     }
 
     public int getWidth() {
+        if (mBitmap == null) return 0;
         if (isOrientationChanged()) {
             return mBitmap.getHeight();
         } else {
