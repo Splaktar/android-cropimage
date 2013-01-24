@@ -358,7 +358,7 @@ public class CropImage extends MonitoredActivity {
 
     /**
      * @param croppedImage the cropped image
-     * @param rect rectangle to crop
+     * @param rect         rectangle to crop
      * @return the bitmap
      * @throws IllegalArgumentException if the rectangle is outside of the image
      */
@@ -371,22 +371,30 @@ public class CropImage extends MonitoredActivity {
         try {
             is = getContentResolver().openInputStream(mSourceUri);
             BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(is, false);
-
-            final int width  = decoder.getWidth();
+            final int width = decoder.getWidth();
             final int height = decoder.getHeight();
-            final Rect adjustedRect = new Rect(
-                    Math.max(0, rect.left),
-                    Math.max(0, rect.top),
-                    Math.min(width, rect.right),
-                    Math.min(height, rect.bottom)
-            );
+
+            if (mExifRotation != 0) {
+
+                // adjust crop area to account for image rotation
+                Matrix matrix = new Matrix();
+                matrix.setRotate(-mExifRotation);
+
+                RectF adjusted = new RectF();
+                matrix.mapRect(adjusted, new RectF(rect));
+
+                // adjust to account for origin at 0,0
+                adjusted.offset(adjusted.left < 0 ? width : 0, adjusted.top < 0 ? height : 0);
+                rect = new Rect((int) adjusted.left, (int) adjusted.top, (int) adjusted.right, (int) adjusted.bottom);
+            }
 
             try {
-                croppedImage = decoder.decodeRegion(adjustedRect,new BitmapFactory.Options());
+                croppedImage = decoder.decodeRegion(rect, new BitmapFactory.Options()
+                );
             } catch (IllegalArgumentException e) {
                 // rethrow with some extra information
                 throw new IllegalArgumentException(
-                        "rectangle "+adjustedRect+" is outside of the image ("+width+","+height+")", e);
+                        "rectangle " + rect + " is outside of the image (" + width + "," + height + "," + mExifRotation + ")", e);
             }
 
         } catch (IOException e) {
