@@ -3,7 +3,7 @@ This is a fork of the [android-cropimage][] project, used in the [SoundCloud And
 
 It contains various bugfixes and enhancements over the original version:
 
- * On API 10+ it uses [BitmapRegionDecoder#decodeRegion][] to perform memory efficient resizing
+ * On API 10+ it uses [BitmapRegionDecoder.decodeRegion][] to perform memory efficient resizing
  * Added support for EXIF to get rotation information
  * Removed face detection support
 
@@ -36,4 +36,4 @@ protected void onActivityResult(int requestCode, int resultCode, Intent result) 
 
 [android-cropimage]: https://github.com/lvillani/android-cropimage
 [SoundCloud Android]: https://play.google.com/store/apps/details?id=com.soundcloud.android
-[BitmapRegionDecoder#decodeRegion]: http://developer.android.com/reference/android/graphics/BitmapRegionDecoder.html#decodeRegion(android.graphics.Rect, android.graphics.BitmapFactory.Options)
+[BitmapRegionDecoder.decodeRegion]: http://developer.android.com/reference/android/graphics/BitmapRegionDecoder.html#decodeRegion(android.graphics.Rect, android.graphics.BitmapFactory.Options)
