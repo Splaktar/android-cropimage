@@ -13,3 +13,4 @@ target/
 
 *.iml
 proguard-project.txt
+.idea
