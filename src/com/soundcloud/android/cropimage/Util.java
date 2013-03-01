@@ -37,6 +37,15 @@ public class Util {
         }
     }
 
+    public static void startBackgroundJob(MonitoredActivity activity,
+            String title, String message, Runnable job, Handler handler) {
+        // Make the progress dialog uncancelable, so that we can gurantee
+        // the thread will be done before the activity getting destroyed.
+        ProgressDialog dialog = ProgressDialog.show(
+                activity, title, message, true, false);
+        new Thread(new BackgroundJob(activity, job, dialog, handler)).start();
+    }
+
     private static class BackgroundJob
             extends MonitoredActivity.LifeCycleAdapter implements Runnable {
 
@@ -52,7 +61,7 @@ public class Util {
         };
 
         public BackgroundJob(MonitoredActivity activity, Runnable job,
-                ProgressDialog dialog, Handler handler) {
+                             ProgressDialog dialog, Handler handler) {
             mActivity = activity;
             mDialog = dialog;
             mJob = job;
@@ -87,14 +96,4 @@ public class Util {
             mDialog.show();
         }
     }
-
-    public static void startBackgroundJob(MonitoredActivity activity,
-            String title, String message, Runnable job, Handler handler) {
-        // Make the progress dialog uncancelable, so that we can gurantee
-        // the thread will be done before the activity getting destroyed.
-        ProgressDialog dialog = ProgressDialog.show(
-                activity, title, message, true, false);
-        new Thread(new BackgroundJob(activity, job, dialog, handler)).start();
-    }
-
 }
