@@ -40,6 +40,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,12 +65,11 @@ public class CropImage extends MonitoredActivity {
     private int mMaxX, mMaxY, mExifRotation;
     private Uri mSaveUri;
 
-    boolean mSaving; // Whether the "save" button is already clicked.
+    private boolean mSaving; // Whether the "save" button is already clicked.
 
-    private CropImageView mImageView;
-
-    private RotateBitmap mRotateBitmap;
-    HighlightView mCrop;
+    private @NotNull CropImageView mImageView;
+    private @Nullable RotateBitmap mRotateBitmap;
+    private HighlightView mCrop;
 
     private Uri mSourceUri;
 
@@ -241,18 +242,20 @@ public class CropImage extends MonitoredActivity {
     }
 
     Runnable mRunCrop = new Runnable() {
-        float mScale = 1F;
 
         // Create a default HightlightView if we found no face in the picture.
         private void makeDefault() {
+            if (mRotateBitmap == null) return;
+
             HighlightView hv = new HighlightView(mImageView);
-            final int width = mRotateBitmap.getWidth();
+            final int width  = mRotateBitmap.getWidth();
             final int height = mRotateBitmap.getHeight();
 
             Rect imageRect = new Rect(0, 0, width, height);
 
             // make the default size about 4/5 of the width or height
             int cropWidth = Math.min(width, height) * 4 / 5;
+            //noinspection SuspiciousNameCombination
             int cropHeight = cropWidth;
 
             if (mAspectX != 0 && mAspectY != 0) {
@@ -273,7 +276,6 @@ public class CropImage extends MonitoredActivity {
         }
 
         public void run() {
-            mScale = 1.0F / mScale;
             mHandler.post(new Runnable() {
                 public void run() {
                     makeDefault();
@@ -316,8 +318,8 @@ public class CropImage extends MonitoredActivity {
             }
         }
 
-        if (IN_MEMORY_CROP) {
-            croppedImage = inMemoryCrop(croppedImage, r, width, height, outWidth, outHeight);
+        if (IN_MEMORY_CROP && mRotateBitmap != null) {
+            croppedImage = inMemoryCrop(mRotateBitmap, croppedImage, r, width, height, outWidth, outHeight);
             if (croppedImage != null) {
                 mImageView.setImageBitmapResetBase(croppedImage, true);
                 mImageView.center(true, true);
@@ -374,7 +376,7 @@ public class CropImage extends MonitoredActivity {
      * @throws IllegalArgumentException if the rectangle is outside of the image
      */
     @TargetApi(10)
-    private Bitmap decodeRegionCrop(Bitmap croppedImage, Rect rect) {
+    private @Nullable Bitmap decodeRegionCrop(Bitmap croppedImage, Rect rect) {
         // release memory now
         clearImageView();
 
@@ -422,7 +424,10 @@ public class CropImage extends MonitoredActivity {
         return croppedImage;
     }
 
-    private Bitmap inMemoryCrop(Bitmap croppedImage, Rect r, int width, int height, int outWidth, int outHeight) {
+    private @Nullable Bitmap inMemoryCrop(@NotNull RotateBitmap rotateBitmap,
+                                Bitmap croppedImage,
+                                Rect r,
+                                int width, int height, int outWidth, int outHeight) {
         // in memory crop, potential OOM errors,
         // but we have no choice as we can't selectively decode a bitmap with this sdk
         System.gc();
@@ -435,8 +440,8 @@ public class CropImage extends MonitoredActivity {
 
             Matrix m = new Matrix();
             m.setRectToRect(new RectF(r), dstRect, Matrix.ScaleToFit.FILL);
-            m.preConcat(mRotateBitmap.getRotateMatrix());
-            canvas.drawBitmap(mRotateBitmap.getBitmap(), m, null);
+            m.preConcat(rotateBitmap.getRotateMatrix());
+            canvas.drawBitmap(rotateBitmap.getBitmap(), m, null);
 
         } catch (OutOfMemoryError e){
             Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
@@ -450,7 +455,9 @@ public class CropImage extends MonitoredActivity {
 
     private void clearImageView() {
         mImageView.clear();
-        mRotateBitmap.recycle();
+        if (mRotateBitmap != null) {
+            mRotateBitmap.recycle();
+        }
         System.gc();
     }
 
@@ -495,14 +502,15 @@ public class CropImage extends MonitoredActivity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
-        mRotateBitmap.recycle();
+        if (mRotateBitmap != null) {
+            mRotateBitmap.recycle();
+        }
+    }
+
+    public boolean isSaving() {
+        return mSaving;
     }
 
     @Override
@@ -545,7 +553,7 @@ public class CropImage extends MonitoredActivity {
             }
         }
 
-    public static File getFromMediaUri(ContentResolver resolver, Uri uri) {
+    public static @Nullable File getFromMediaUri(ContentResolver resolver, Uri uri) {
         if (uri == null) return null;
 
         if ("file".equals(uri.getScheme())) {
