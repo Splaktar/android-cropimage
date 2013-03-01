@@ -19,7 +19,6 @@
 package com.soundcloud.android.cropimage;
 
 import android.annotation.TargetApi;
-import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
@@ -98,31 +97,22 @@ public class CropImageActivity extends MonitoredActivity {
             mAspectY = extras.getInt("aspectY");
             mMaxX = extras.getInt("maxX");
             mMaxY = extras.getInt("maxY");
-            mExifRotation = extras.getInt("exifRotation");
             mSaveUri = (Uri) extras.getParcelable(MediaStore.EXTRA_OUTPUT);
-            if (extras.containsKey("data")){
-                mRotateBitmap = new RotateBitmap((Bitmap) extras.getParcelable("data"), mExifRotation);
-            }
         }
 
         mSourceUri = intent.getData();
-        if (mSourceUri != null && mRotateBitmap == null) {
+        if (mSourceUri != null) {
             mExifRotation = getExifRotation(getFromMediaUri(getContentResolver(), mSourceUri));
 
             InputStream is = null;
             try {
                 is = getContentResolver().openInputStream(mSourceUri);
-                mRotateBitmap =  new RotateBitmap(BitmapFactory.decodeStream(is), mExifRotation);
+                mRotateBitmap = new RotateBitmap(BitmapFactory.decodeStream(is), mExifRotation);
             } catch (IOException e) {
                 Log.e(TAG, "error reading picture: " + e.getMessage(), e);
                 finish();
             } finally {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (IOException ignored) {
-                    }
-                }
+                Util.closeSilently(is);
             }
         }
 
@@ -156,7 +146,7 @@ public class CropImageActivity extends MonitoredActivity {
             return;
         }
         mImageView.setImageRotateBitmapResetBase(mRotateBitmap, true);
-        startBackgroundJob(this, null,
+        Util.startBackgroundJob(this, null,
                 getResources().getString(R.string.please_wait),
                 new Runnable() {
                     public void run() {
@@ -180,70 +170,9 @@ public class CropImageActivity extends MonitoredActivity {
     }
 
 
-
-    private static class BackgroundJob extends
-            MonitoredActivity.LifeCycleAdapter implements Runnable {
-
-        private final MonitoredActivity mActivity;
-        private final ProgressDialog mDialog;
-        private final Runnable mJob;
-        private final Handler mHandler;
-        private final Runnable mCleanupRunner = new Runnable() {
-            public void run() {
-                mActivity.removeLifeCycleListener(BackgroundJob.this);
-                if (mDialog.getWindow() != null)
-                    mDialog.dismiss();
-            }
-        };
-
-        public BackgroundJob(MonitoredActivity activity, Runnable job,
-                ProgressDialog dialog, Handler handler) {
-            mActivity = activity;
-            mDialog = dialog;
-            mJob = job;
-            mActivity.addLifeCycleListener(this);
-            mHandler = handler;
-        }
-
-        public void run() {
-            try {
-                mJob.run();
-            } finally {
-                mHandler.post(mCleanupRunner);
-            }
-        }
-
-        @Override
-        public void onActivityDestroyed(MonitoredActivity activity) {
-            // We get here only when the onDestroyed being called before
-            // the mCleanupRunner. So, run it now and remove it from the queue
-            mCleanupRunner.run();
-            mHandler.removeCallbacks(mCleanupRunner);
-        }
-
-        @Override
-        public void onActivityStopped(MonitoredActivity activity) {
-            mDialog.hide();
-        }
-
-        @Override
-        public void onActivityStarted(MonitoredActivity activity) {
-            mDialog.show();
-        }
-    }
-
-    private static void startBackgroundJob(MonitoredActivity activity,
-            String title, String message, Runnable job, Handler handler) {
-        // Make the progress dialog uncancelable, so that we can guarantee
-        // the thread will be done before the activity getting destroyed.
-        ProgressDialog dialog = ProgressDialog.show(activity, title, message,
-                true, false);
-        new Thread(new BackgroundJob(activity, job, dialog, handler)).start();
-    }
-
     Runnable mRunCrop = new Runnable() {
 
-        // Create a default HightlightView if we found no face in the picture.
+        // Create a default HighlightView if we found no face in the picture.
         private void makeDefault() {
             if (mRotateBitmap == null) return;
 
@@ -414,12 +343,7 @@ public class CropImageActivity extends MonitoredActivity {
             Log.e(TAG, "error cropping picture: " + e.getMessage(), e);
             finish();
         } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException ignored) {
-                }
-            }
+            Util.closeSilently(is);
         }
         return croppedImage;
     }
