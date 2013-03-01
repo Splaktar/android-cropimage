@@ -52,9 +52,9 @@ import java.util.concurrent.CountDownLatch;
 /**
  * The activity can crop specific region of interest from an image.
  */
-public class CropImage extends MonitoredActivity {
+public class CropImageActivity extends MonitoredActivity {
 
-    private static final String TAG = CropImage.class.getSimpleName();
+    private static final String TAG = CropImageActivity.class.getSimpleName();
     public static final boolean IN_MEMORY_CROP = Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD_MR1;
 
     private int mAspectX, mAspectY;
