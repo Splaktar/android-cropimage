@@ -7,7 +7,7 @@ It contains various bugfixes and enhancements over the original version:
  * Removed face detection support
  * Requires API 10+
 
- # Usage
+ # Usage from within your Activity or Fragment:
 
 ```java
 private crop(Uri input, Uri output, int width, int height)
