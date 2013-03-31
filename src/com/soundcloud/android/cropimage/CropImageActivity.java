@@ -18,6 +18,12 @@
 // data to caller. Removed saving to file, MediaManager, unneeded options, etc.
 package com.soundcloud.android.cropimage;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.concurrent.CountDownLatch;
+
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Intent;
@@ -39,14 +45,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * The activity can crop specific region of interest from an image.
@@ -54,7 +52,7 @@ import java.util.concurrent.CountDownLatch;
 public class CropImageActivity extends MonitoredActivity {
 
     private static final String TAG = CropImageActivity.class.getSimpleName();
-    public static final boolean IN_MEMORY_CROP = Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD_MR1;
+    public static final boolean IN_MEMORY_CROP = Build.VERSION.SDK_INT <= Build.VERSION_CODES.GINGERBREAD;
 
     private int mAspectX, mAspectY;
     private final Handler mHandler = new Handler();
@@ -66,8 +64,8 @@ public class CropImageActivity extends MonitoredActivity {
 
     private boolean mSaving; // Whether the "save" button is already clicked.
 
-    private @NotNull CropImageView mImageView;
-    private @Nullable RotateBitmap mRotateBitmap;
+    private CropImageView mImageView;
+    private RotateBitmap mRotateBitmap;
     private HighlightView mCrop;
 
     private Uri mSourceUri;
@@ -103,6 +101,11 @@ public class CropImageActivity extends MonitoredActivity {
         mSourceUri = intent.getData();
         if (mSourceUri != null) {
             mExifRotation = getExifRotation(getFromMediaUri(getContentResolver(), mSourceUri));
+            
+            // Can't assume that getExifRotation() will always return a valid number.
+            // This fixes the issue with the image viewer having a crooked image!
+            if (mExifRotation == -1)
+            	mExifRotation = 0;
 
             InputStream is = null;
             try {
@@ -218,10 +221,8 @@ public class CropImageActivity extends MonitoredActivity {
         }
     };
 
-    private void onSaveClicked() {
-        // TODO this code needs to change to use the decode/crop/encode single
-        // step api so that we don't require that the whole (possibly large)
-        // bitmap doesn't have to be read into memory
+    private void onSaveClicked() 
+    {
         if (mCrop == null) {
             return;
         }
@@ -298,14 +299,14 @@ public class CropImageActivity extends MonitoredActivity {
         }
     }
 
-    /**
+	/**
      * @param croppedImage the cropped image
      * @param rect rectangle to crop
      * @return the bitmap
      * @throws IllegalArgumentException if the rectangle is outside of the image
      */
     @TargetApi(10)
-    private @Nullable Bitmap decodeRegionCrop(Bitmap croppedImage, Rect rect) {
+    private Bitmap decodeRegionCrop(Bitmap croppedImage, Rect rect) {
         // release memory now
         clearImageView();
 
@@ -348,12 +349,12 @@ public class CropImageActivity extends MonitoredActivity {
         return croppedImage;
     }
 
-    private @Nullable Bitmap inMemoryCrop(@NotNull RotateBitmap rotateBitmap,
+    private Bitmap inMemoryCrop(RotateBitmap rotateBitmap,
                                 Bitmap croppedImage,
                                 Rect r,
                                 int width, int height, int outWidth, int outHeight) {
         // in memory crop, potential OOM errors,
-        // but we have no choice as we can't selectively decode a bitmap with this sdk
+        // but we have no choice as we can't selectively decode a bitmap with this SDK
         System.gc();
 
         try {
@@ -390,8 +391,9 @@ public class CropImageActivity extends MonitoredActivity {
             OutputStream outputStream = null;
             try {
                 outputStream = getContentResolver().openOutputStream(mSaveUri);
-                if (outputStream != null) {
-                    croppedImage.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
+                if (outputStream != null)
+                {
+                    croppedImage.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
                 }
 
             } catch (IOException ex) {
@@ -416,7 +418,8 @@ public class CropImageActivity extends MonitoredActivity {
 
         final Bitmap b = croppedImage;
         mHandler.post(new Runnable() {
-            public void run() {
+            public void run()
+            {	
                 mImageView.clear();
                 b.recycle();
             }
@@ -477,7 +480,7 @@ public class CropImageActivity extends MonitoredActivity {
             }
         }
 
-    public static @Nullable File getFromMediaUri(ContentResolver resolver, Uri uri) {
+    public static File getFromMediaUri(ContentResolver resolver, Uri uri) {
         if (uri == null) return null;
 
         if ("file".equals(uri.getScheme())) {
