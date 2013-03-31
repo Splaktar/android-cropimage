@@ -39,7 +39,7 @@ public class Util {
 
     public static void startBackgroundJob(MonitoredActivity activity,
             String title, String message, Runnable job, Handler handler) {
-        // Make the progress dialog uncancelable, so that we can gurantee
+        // Make the progress dialog uncancelable, so that we can guarantee
         // the thread will be done before the activity getting destroyed.
         ProgressDialog dialog = ProgressDialog.show(
                 activity, title, message, true, false);
