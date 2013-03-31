@@ -29,7 +29,7 @@ protected void onActivityResult(int requestCode, int resultCode, Intent result) 
     if (resultCode == RESULT_OK) {
        if (result.getExtras().containsKey("error")) {
           Exception e = (Exception) result.getSerializableExtra("error");
- 			      Log.e(CropImageActivity.class.getSimpleName(), e.getMessage(), e);
+          Log.e(CropImageActivity.class.getSimpleName(), e.getMessage(), e);
        } else {
            // crop successful
        }
