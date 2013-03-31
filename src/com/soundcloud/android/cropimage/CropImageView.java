@@ -1,12 +1,12 @@
 package com.soundcloud.android.cropimage;
 
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-
-import java.util.ArrayList;
 
 public class CropImageView extends ImageViewTouchBase {
     ArrayList<HighlightView> mHighlightViews = new ArrayList<HighlightView>();
@@ -16,17 +16,14 @@ public class CropImageView extends ImageViewTouchBase {
 
     Context mContext;
 
-    @SuppressWarnings("UnusedDeclaration")
     public CropImageView(Context context) {
         super(context);
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     public CropImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     public CropImageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
